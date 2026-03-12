@@ -1,0 +1,31 @@
+# # Pipeline : Tests, Build Docker, Push, Deploy
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Run tests
+#         run: echo "TODO: Add test steps"
+
+#   build:
+#     needs: test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Build Docker images
+#         run: echo "TODO: Add build steps"
+
+#   deploy:
+#     needs: build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Deploy
+#         run: echo "TODO: Add deploy steps"
