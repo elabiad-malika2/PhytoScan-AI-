@@ -1,17 +1,41 @@
-# Backend dependencies
+# --- Core API ---
 fastapi
 uvicorn
-sqlalchemy
-alembic
-psycopg2-binary
 pydantic
 pydantic-settings
-python-jose[cryptography]
-passlib[bcrypt]
 python-multipart
-reportlab
+
+# --- Base de Données ---
+sqlalchemy
+psycopg2-binary
+alembic
+
+# --- Auth & Sécurité ---
+python-jose[cryptography]
+bcrypt
+email-validator
+
+# --- IA : Vision par Ordinateur (TensorFlow) ---
+tensorflow-cpu
+Pillow
+numpy
+
+# --- IA : RAG (Pur) & Gemini ---
 chromadb
-langchain
+sentence-transformers
+google-genai
+PyMuPDF
+
+# --- Génération de PDF ---
+fpdf
+
+# --- MLOps & Monitoring ---
 mlflow
-pytest
-httpx
+prometheus-client
+prometheus-fastapi-instrumentator
+
+langchain-groq
+
+pytest 
+deepeval
+ollama
