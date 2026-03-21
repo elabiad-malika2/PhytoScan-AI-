@@ -1,52 +1,128 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
+  # 1. Base de données relationnelle (PostgreSQL)
+  postgres:
+    image: postgres:15
+    container_name: phyto_postgres
+    restart: always
     env_file:
       - .env
-    depends_on:
-      - postgres
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - phyto_network
 
+  # 2. Base de données Vectorielle pour le RAG (ChromaDB)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: phyto_chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000" # Externe 8001 pour ne pas confliter avec FastAPI
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - phyto_network
+
+  # 3. Backend (FastAPI + Vision + RAG)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phyto_backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # Synchronisation en temps réel du code (Hot reload)
+      - ./data:/app/data # Accès aux images et documents PDF
+      - ./evaluation:/app/evaluation 
+    depends_on:
+      - postgres
+      - chromadb
+    networks:
+      - phyto_network
+    
+
+  # 4. Frontend (React/Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: phyto_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Empêche d'écraser les modules Linux par ceux de ton Windows/Mac
+    depends_on:
+      - backend
+    networks:
+      - phyto_network
+
+  # 5. Serveur LLMOps (MLFlow)
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
+    container_name: phyto_mlflow
+    restart: unless-stopped
     ports:
       - "5000:5000"
-
-  prometheus:
-    image: prom/prometheus
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --allowed-hosts "mlflow,localhost,127.0.0.1,*"
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    environment:
+      - MLFLOW_SERVER_ALLOWED_HOSTS=mlflow,localhost,127.0.0.1,*
     volumes:
-      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - mlflow_data:/mlflow
+    networks:
+      - phyto_network
+
+  # 6. Monitoring - Collecte des métriques (Prometheus)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: phyto_prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
-
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3001:3000"
     volumes:
-      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - phyto_network
 
+  # 7. Monitoring - Dashboards (Grafana)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: phyto_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - phyto_network
+# Définition des Volumes persistants
 volumes:
   postgres_data:
+  chroma_data:
+  mlflow_data:
+  prometheus_data:
+  grafana_data:
+
+# Définition du réseau interne
+networks:
+  phyto_network:
+    driver: bridge
