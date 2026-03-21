@@ -1,1 +1,0 @@
-# Schéma Chat (Pydantic)
