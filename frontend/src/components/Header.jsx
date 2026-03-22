@@ -25,24 +25,28 @@ export default function Header({ token, onLogout }) {
           <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
             À propos
           </NavLink>
-          <NavLink
-            to="/diagnostic"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            Diagnostic
-          </NavLink>
-          <NavLink
-            to="/assistant"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            Assistant
-          </NavLink>
-          <NavLink
-            to="/history"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            Historique
-          </NavLink>
+          {token && (
+            <>
+              <NavLink
+                to="/diagnostic"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                Diagnostic
+              </NavLink>
+              <NavLink
+                to="/assistant"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                Assistant
+              </NavLink>
+              <NavLink
+                to="/history"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                Historique
+              </NavLink>
+            </>
+          )}
         </nav>
 
         <div className="header-right">

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export default function Footer() {
+export default function Footer({ token }) {
   return (
     <footer className="footer">
       <div className="container" style={{ paddingTop: 22, paddingBottom: 18 }}>
@@ -23,8 +23,13 @@ export default function Footer() {
             <div className="footer-links">
               <Link to="/">Accueil</Link>
               <Link to="/about">À propos</Link>
-              <Link to="/diagnostic">Diagnostic</Link>
-              <Link to="/assistant">Assistant</Link>
+              {token && (
+                <>
+                  <Link to="/diagnostic">Diagnostic</Link>
+                  <Link to="/assistant">Assistant</Link>
+                  <Link to="/history">Historique</Link>
+                </>
+              )}
             </div>
           </div>
 

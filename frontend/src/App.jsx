@@ -26,6 +26,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setToken(null);
   };
 
@@ -112,7 +113,7 @@ function AppInner({ token, setToken, role, onLogout }) {
         </Routes>
       </main>
 
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <Footer token={token} />}
     </div>
   );
 }
