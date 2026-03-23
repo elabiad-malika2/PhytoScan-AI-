@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -6,12 +6,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    # Ajouter pour Postgres
-    POSTGRES_USER: str =None
-    POSTGRES_PASSWORD: str=None
-    POSTGRES_DB: str=None
-    POSTGRES_HOST: str=None
-    POSTGRES_PORT: int=None
+    # Optionnel si DATABASE_URL pointe ailleurs (ex. SQLite en tests / CI)
+    POSTGRES_USER: str | None = None
+    POSTGRES_PASSWORD: str | None = None
+    POSTGRES_DB: str | None = None
+    POSTGRES_HOST: str | None = None
+    POSTGRES_PORT: int | None = None
 
     GEMINI_API_KEY:str
     GROQ_API_KEY: str
