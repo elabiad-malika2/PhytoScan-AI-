@@ -30,8 +30,8 @@ app = FastAPI(
 # À mettre tout à la fin de main.py, juste avant la route @app.get("/")
 Instrumentator().instrument(app).expose(app)
 # 3. Création des dossiers physiques (pour stocker images et PDFs)
-UPLOAD_DIR = "/app/data/uploads"
-REPORTS_DIR = "/app/data/reports"
+UPLOAD_DIR = os.path.join(settings.DATA_ROOT, "uploads")
+REPORTS_DIR = os.path.join(settings.DATA_ROOT, "reports")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(REPORTS_DIR, exist_ok=True)
 

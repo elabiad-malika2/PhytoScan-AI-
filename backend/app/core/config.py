@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     MLFLOW_TRACKING_URI:str
     OPENAI_API_KEY:str
 
+    # Racine des données (uploads, rapports, modèles). Docker : /app/data ; CI : chemin sous le workspace.
+    DATA_ROOT: str = "/app/data"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

@@ -2,8 +2,9 @@ import os
 from fpdf import FPDF
 from datetime import datetime
 
-# Dossier où seront stockés les PDF générés dans Docker
-REPORTS_DIR = "/app/data/reports"
+from app.core.config import settings
+
+REPORTS_DIR = os.path.join(settings.DATA_ROOT, "reports")
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
 class PhytoReportPDF(FPDF):

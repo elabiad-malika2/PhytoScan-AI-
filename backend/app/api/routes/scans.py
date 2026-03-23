@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.api.deps import get_db, get_current_user,get_current_agriculteur
+from app.core.config import settings
 from app.models.user import User
 
 # Imports des Services (Vision + RAG)
@@ -20,7 +21,7 @@ from app.schemas.scan_schema import ScanAnalyzeResponse
 
 router = APIRouter()
 
-UPLOAD_DIR = "/app/data/uploads"
+UPLOAD_DIR = os.path.join(settings.DATA_ROOT, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True) 
 
 @router.post("/analyze",response_model=ScanAnalyzeResponse)
