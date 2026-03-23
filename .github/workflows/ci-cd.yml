@@ -20,11 +20,22 @@ jobs:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       GEMINI_API_KEY: fake_gemini_key
+      GROQ_API_KEY: fake_groq_key
+      OPENAI_API_KEY: fake_openai_key
       MLFLOW_TRACKING_URI: http://localhost:5000
 
     steps:
       - name: Récupération du code
         uses: actions/checkout@v4
+
+      # Libère ~20–25 Go (dotnet, android, etc.) : sans ça, pip + TF échoue souvent avec "No space left on device"
+      - name: Libérer de l'espace disque sur le runner
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          df -h
 
       - name: Installation de Python
         uses: actions/setup-python@v5
@@ -34,9 +45,9 @@ jobs:
       - name: Installation des dépendances
         run: |
           python -m pip install --upgrade pip
-          # On installe les dépendances du backend + les librairies de test
-          pip install -r backend/requirements.txt
-          pip install pytest httpx
+          # --no-cache-dir évite de remplir le disque avec le cache pip
+          pip install --no-cache-dir -r backend/requirements.txt
+          pip install --no-cache-dir httpx
 
       - name: Tests Unitaires (API, Authentification, Mocks IA)
         run: |
