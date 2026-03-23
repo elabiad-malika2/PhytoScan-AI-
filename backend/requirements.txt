@@ -37,5 +37,8 @@ prometheus-fastapi-instrumentator
 langchain-groq
 
 pytest 
-deepeval
 ollama
+
+ragas
+datasets
+langchain-community
