@@ -23,6 +23,8 @@ jobs:
       GROQ_API_KEY: fake_groq_key
       OPENAI_API_KEY: fake_openai_key
       MLFLOW_TRACKING_URI: http://localhost:5000
+      # Pas de permission sur /app sur les runners GitHub → données sous le repo
+      DATA_ROOT: ${{ github.workspace }}/backend/data
 
     steps:
       - name: Récupération du code
