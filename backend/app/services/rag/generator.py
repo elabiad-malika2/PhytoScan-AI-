@@ -2,18 +2,24 @@ import os
 import mlflow
 from google import genai # Nouvelle librairie Google
 from app.core.config import settings
+from prometheus_client import Histogram
 from app.services.rag.retriever import retrieve_and_rerank
 
 # Initialisation du client Google GenAI
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-# Configuration MLFlow
-MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
-mlflow.set_tracking_uri(MLFLOW_URI)
-mlflow.set_experiment("PhytoScan_Production_RAG")
+# Création du Chronomètre Prometheus (Mesure le temps de réponse de l'IA)
+RAG_LATENCY = Histogram('rag_generation_latency_seconds', 'Temps pris par Gemini pour répondre')
+
+
 
 def generate_agricultural_advice(maladie_detectee: str, langue: str = "fr"):
     """Orchestre le RAG, génère la réponse, et logue TOUT dans MLFlow."""
+
+    # Configuration MLFlow
+    MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+    mlflow.set_tracking_uri(MLFLOW_URI)
+    mlflow.set_experiment("PhytoScan_Production_RAG")
     
     # 1. On récupère les listes de contextes
     ranked_chunks, ranked_metadatas = retrieve_and_rerank(maladie_detectee)
