@@ -1,4 +1,23 @@
-{
-  "questions": [],
-  "answers": []
-}
+[
+  {
+    "input": "Quel est l'agent causal de la tavelure du pommier ?",
+    "expected_output": "La tavelure du pommier est une maladie fongique causée par Venturia inaequalis.",
+    "expected_context": [
+      "I. Pommier : Tavelure (Apple Scab)\n1. Description\nLa tavelure du pommier est une maladie fongique causée par Venturia inaequalis."
+    ]
+  },
+  {
+    "input": "Quel est l'agent causal de la pourriture noire du pommier ?",
+    "expected_output": "La pourriture noire est une maladie fongique causée par Botryosphaeria obtusa (syn. Sphaeropsis malorum).",
+    "expected_context": [
+      "II. Pommier : Pourriture Brune (Black Rot)\n1. Description\nLa pourriture noire est une maladie fongique causée par Botryosphaeria obtusa (syn. Sphaeropsis malorum)."
+    ]
+  },
+  {
+    "input": "Que faut-il faire en prophylaxie contre la pourriture noire du pommier ?",
+    "expected_output": "Il faut éliminer et détruire les fruits momifiés et les branches chancreuses, assurer une bonne hygiène du verger, et utiliser des variétés moins sensibles si possible.",
+    "expected_context": [
+      "II. Pommier : Pourriture Brune (Black Rot)\n4. Traitements Recommandés\nProphylaxie : Élimination et destruction des fruits momifiés et des branches chancreuses pour réduire l'inoculum. Assurer une bonne hygiène du verger. Utiliser des variétés moins sensibles si possible."
+    ]
+  }
+]
