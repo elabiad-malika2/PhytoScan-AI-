@@ -1,0 +1,215 @@
+version: '3.8'
+
+services:
+  # 1. Base de données relationnelle (PostgreSQL)
+  postgres:
+    image: postgres:15
+    container_name: phyto_postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - phyto_network
+
+  # 2. Base de données Vectorielle pour le RAG (ChromaDB)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: phyto_chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000" # Externe 8001 pour ne pas confliter avec FastAPI
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - phyto_network
+
+  # 3. Backend (FastAPI + Vision + RAG)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phyto_backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - ./evaluation:/app/evaluation 
+    depends_on:
+      - postgres
+      - chromadb
+    networks:
+      - phyto_network
+
+  # 4. Frontend (React/Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: phyto_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - phyto_network
+
+  # 5. Serveur LLMOps (MLFlow)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: phyto_mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    environment:
+      # En local/dev, on autorise tous les hosts pour éviter les blocages
+      # "Invalid Host header - possible DNS rebinding attack detected".
+      # IMPORTANT: à restreindre en production.
+      - MLFLOW_SERVER_ALLOWED_HOSTS=*
+    volumes:
+      - mlflow_data:/mlflow
+    networks:
+      - phyto_network
+
+  # 6. Monitoring - Collecte des métriques applicatives (Prometheus)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: phyto_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - phyto_network
+
+  # 7. Monitoring - Dashboards (Grafana)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: phyto_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # 👇 AJOUT : Branchement automatique de Prometheus à Grafana 👇
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - phyto_network
+
+  #  8. NOUVEAU SERVICE : Monitoring - Infrastructure Docker CPU/RAM (cAdvisor) 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: phyto_cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true 
+    command: -logtostderr -stderrthreshold=FATAL -docker_only=true
+    networks:
+      - phyto_network
+    
+    # ==============================================================
+  # 🌬️ APACHE AIRFLOW (ORCHESTRATION DU PIPELINE DE DONNÉES)
+  # ==============================================================
+
+  # 9. Initialisation d'Airflow (Création de l'admin et des tables)
+  airflow-init:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: phyto_airflow_init
+    depends_on:
+      - postgres
+    environment:
+      # Airflow va utiliser ton PostgreSQL existant pour stocker son état !
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - _AIRFLOW_DB_UPGRADE=true
+      - _AIRFLOW_WWW_USER_CREATE=true
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin
+    command: version
+    networks:
+      - phyto_network
+
+  # 10. Le Planificateur Airflow (Celui qui exécute ton code Python)
+  airflow-scheduler:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: phyto_airflow_scheduler
+    restart: always
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__WEBSERVER__SECRET_KEY=super_cle_secrete_phytoscan_1234
+      # 👇 TRES IMPORTANT : Installe Pillow à la volée pour redimensionner les images !
+      - _PIP_ADDITIONAL_REQUIREMENTS=Pillow 
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags  # Lit ton code Airflow
+      - ./airflow/logs:/opt/airflow/logs
+      - ./data:/app/data                  # Accède aux images à nettoyer !
+    command: scheduler
+    networks:
+      - phyto_network
+
+  # 11. L'Interface Web Airflow (Pour le Jury)
+  airflow-webserver:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: phyto_airflow_webserver
+    restart: always
+    depends_on:
+      - airflow-scheduler
+    ports:
+      - "8081:8080" # L'interface sera sur le port 8080
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./data:/app/data
+    command: webserver
+    networks:
+      - phyto_network
+
+# Définition des Volumes persistants
+volumes:
+  postgres_data:
+  chroma_data:
+  mlflow_data:
+  prometheus_data:
+  grafana_data:
+
+# Définition du réseau interne
+networks:
+  phyto_network:
+    driver: bridge
