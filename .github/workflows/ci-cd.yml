@@ -30,7 +30,6 @@ jobs:
       - name: Récupération du code
         uses: actions/checkout@v4
 
-      # Libère ~20–25 Go (dotnet, android, etc.) : sans ça, pip + TF échoue souvent avec "No space left on device"
       - name: Libérer de l'espace disque sur le runner
         run: |
           sudo rm -rf /usr/share/dotnet
