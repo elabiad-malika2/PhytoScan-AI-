@@ -1,0 +1,44 @@
+# --- Core API ---
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-multipart
+
+# --- Base de Données ---
+sqlalchemy
+psycopg2-binary
+alembic
+
+# --- Auth & Sécurité ---
+python-jose[cryptography]
+bcrypt
+email-validator
+
+# --- IA : Vision par Ordinateur (TensorFlow) ---
+tensorflow-cpu
+Pillow
+numpy
+
+# --- IA : RAG (Pur) & Gemini ---
+chromadb
+sentence-transformers
+google-genai
+PyMuPDF
+
+# --- Génération de PDF ---
+fpdf
+
+# --- MLOps & Monitoring ---
+mlflow
+prometheus-client
+prometheus-fastapi-instrumentator
+
+langchain-groq
+
+pytest 
+ollama
+
+ragas
+datasets
+langchain-community
