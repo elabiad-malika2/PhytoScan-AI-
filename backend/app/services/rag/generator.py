@@ -57,30 +57,28 @@ def generate_agricultural_advice(maladie_detectee: str, langue: str = "fr"):
         contents=prompt
     )
 
-    # =======================================================
+   # =======================================================
     # 4. LOGGING COMPLET DANS MLFLOW (Production Tracking)
     # =======================================================
-    # nested=True permet d'éviter les crashs si ce code est appelé par ton script DeepEval
-    with mlflow.start_run(run_name=f"Query_{maladie_detectee[:15]}", nested=True):
-        
-        # Loguer les paramètres d'entrée
-        mlflow.log_param("Input_Maladie", maladie_detectee)
-        mlflow.log_param("Input_Langue", langue)
-        mlflow.log_param("LLM_Model", "gemini-2.5-flash")
-        
-        # Loguer les informations du Retriever & Reranker
-        mlflow.log_param("Retriever_Source_Top1", source_maladie)
-        mlflow.log_param("Nb_Chunks_Trouves", len(ranked_chunks))
-        
-        # Loguer les textes complets (sous forme de fichiers texte dans l'interface MLFlow)
-        mlflow.log_text(prompt, "prompt_envoye_au_LLM.txt")
-        mlflow.log_text(response.text, "reponse_generee_par_LLM.txt")
-        
-        # Loguer TOUS les chunks trouvés par ChromaDB pour vérifier si le Retriever a bien fait son travail
-        tous_les_chunks = "\n\n=== CHUNK SUIVANT ===\n\n".join(ranked_chunks)
-        mlflow.log_text(tous_les_chunks, "chunks_retrouves_par_ChromaDB.txt")
+    try:
+        # On essaie d'envoyer les logs à MLFlow
+        with mlflow.start_run(run_name=f"Query_{maladie_detectee[:15]}", nested=True):
+            mlflow.log_param("Input_Maladie", maladie_detectee)
+            mlflow.log_param("Input_Langue", langue)
+            mlflow.log_param("LLM_Model", "gemini-2.5-flash")
+            mlflow.log_param("Retriever_Source_Top1", source_maladie)
+            mlflow.log_param("Nb_Chunks_Trouves", len(ranked_chunks))
+            mlflow.log_text(prompt, "prompt_envoye_au_LLM.txt")
+            mlflow.log_text(response.text, "reponse_generee_par_LLM.txt")
+            
+            tous_les_chunks = "\n\n=== CHUNK SUIVANT ===\n\n".join(ranked_chunks)
+            mlflow.log_text(tous_les_chunks, "chunks_retrouves_par_ChromaDB.txt")
+            
+    except Exception as e:
+        # Si MLFlow plante (Erreur 403, Serveur éteint, etc.), on empêche le crash !
+        print(f"⚠️ AVERTISSEMENT : Impossible de sauvegarder dans MLFlow. L'analyse continue... Erreur : {e}")
 
-    # 5. Retour au Backend
+    # 5. Retour au Backend (L'agriculteur reçoit sa réponse dans tous les cas !)
     return {
         "maladie_detectee": maladie_detectee,
         "rapport_ia": response.text,
