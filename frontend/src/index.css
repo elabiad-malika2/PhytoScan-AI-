@@ -1,0 +1,4 @@
+/* Keep this file minimal; the theme lives in styles/phyto.css */
+#root{
+  min-height: 100vh;
+}
