@@ -283,7 +283,7 @@ Logger également :
 
 # Evaluation du RAG
 
-Utiliser **DeepEval** pour mesurer la qualité des réponses du système.
+Utiliser **RAGAS** pour mesurer la qualité des réponses du système.
 
 ### Métriques utilisées
 
@@ -321,4 +321,3 @@ Utilisation de **Prometheus** et **Grafana** pour surveiller :
 - nombre de requêtes
 - taux d’erreurs
 
-Configurer des **alertes automatiques** en cas de problème.
