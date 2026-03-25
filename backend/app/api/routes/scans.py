@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException,Form
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -27,7 +27,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("/analyze",response_model=ScanAnalyzeResponse)
 async def analyze_plant_image(
     file: UploadFile = File(...),
-    langue: str = "fr",
+    langue: str = Form("fr"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_agriculteur) 
 ):
@@ -86,4 +86,6 @@ async def analyze_plant_image(
         }
 
     except Exception as e:
+        import traceback          
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'analyse : {str(e)}")
