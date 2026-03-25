@@ -9,6 +9,5 @@ export default function AdminFooter() {
       </div>
     </footer>
   );
-
 }
 
