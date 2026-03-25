@@ -1,8 +1,11 @@
-# Prometheus Configuration
 global:
-  scrape_interval: 15s
+  scrape_interval: 5s
 
 scrape_configs:
-  - job_name: 'phytoscan-api'
+  - job_name: 'phytoscan_fastapi'
     static_configs:
       - targets: ['backend:8000']
+
+  - job_name: 'docker_cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
