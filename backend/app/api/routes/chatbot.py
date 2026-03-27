@@ -14,23 +14,18 @@ from app.services.rag.generator import generate_agricultural_advice
 
 router = APIRouter()
 
-# ==========================================
-# ROUTE 1 : POSER UNE QUESTION AU CHATBOT
-# ==========================================
 @router.post("/ask", response_model=ChatResponse)
 def poser_question_expert(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_agriculteur) # Vérifie que l'agriculteur est connecté
+    current_user: User = Depends(get_current_agriculteur) 
 ):
     try:
-        # 1. On donne la question au RAG (Gemini + ChromaDB)
         rag_result = generate_agricultural_advice(
             maladie_detectee=request.question,
             langue=request.langue
         )
         
-        # 2. On sauvegarde la discussion dans la table `queries` via le DAL
         save_chat_history(
             db=db,
             user_id=current_user.id,
@@ -38,7 +33,6 @@ def poser_question_expert(
             response=rag_result["rapport_ia"]
         )
 
-        # 3. On renvoie la réponse au Frontend
         return {
             "question_posee": request.question,
             "rapport_ia": rag_result["rapport_ia"],
@@ -49,9 +43,7 @@ def poser_question_expert(
         raise HTTPException(status_code=500, detail=f"Erreur de l'IA : {str(e)}")
 
 
-# ==========================================
-# ROUTE 2 : VOIR SON HISTORIQUE DE CHAT
-# ==========================================
+
 @router.get("/history", response_model=List[ChatHistoryResponse])
 def obtenir_historique_chat(
     db: Session = Depends(get_db),
@@ -59,6 +51,5 @@ def obtenir_historique_chat(
 ):
     """Renvoie toutes les anciennes questions/réponses de l'agriculteur."""
     
-    # Appelle le DAL pour lire la table `queries`
     historique = get_user_chat_history(db, current_user.id)
     return historique

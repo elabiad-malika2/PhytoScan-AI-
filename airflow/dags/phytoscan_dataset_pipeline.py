@@ -8,18 +8,14 @@ from PIL import Image
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-# =======================================================
-# 1. CONFIGURATION DES CHEMINS
-# =======================================================
-BASE_DIR = "/app/data" # À adapter selon ton serveur/ordinateur
+
+BASE_DIR = "/app/data" 
 RAW_DATASET = os.path.join(BASE_DIR, "Plant_leave_diseases_dataset")
 RESIZED_DATASET = os.path.join(BASE_DIR, "resized_dataset")
 BALANCED_DATASET = os.path.join(BASE_DIR, "balanced_dataset")
 FINAL_SPLIT_DATASET = os.path.join(BASE_DIR, "plant_images")
 
-# =======================================================
-# 2. FONCTIONS MÉTIER (Ton code de Data Prep)
-# =======================================================
+
 
 def clean_class_name(name):
     """Nettoie les noms de dossiers (ex: 'Apple___healthy' -> 'apple_healthy')."""
@@ -80,7 +76,7 @@ def task_split_train_val_test():
     for cls in os.listdir(BALANCED_DATASET):
         cls_path = os.path.join(BALANCED_DATASET, cls)
         images = os.listdir(cls_path)
-        random.shuffle(images) # Très important pour éviter les biais
+        random.shuffle(images) 
 
         train_end = int(len(images) * train_ratio)
         val_end = int(len(images) * (train_ratio + val_ratio))
@@ -97,12 +93,10 @@ def task_split_train_val_test():
                 dst = os.path.join(split_path, img)
                 shutil.copyfile(src, dst) 
 
-    print(" Split terminé. Le dataset est prêt pour TensorFlow !")
+    print(" Split terminé. Le dataset est prêt pour Entrainement !")
 
 
-# =======================================================
-# 3. CRÉATION DU DAG AIRFLOW
-# =======================================================
+
 default_args = {
     'owner': 'data_engineer_phytoscan',
     'depends_on_past': False,
@@ -114,13 +108,12 @@ with DAG(
     dag_id='phytoscan_dataset_preparation',
     default_args=default_args,
     description="Pipeline de préparation des images pour l'entraînement d'EfficientNet",
-    schedule_interval='@monthly', # Se lance 1 fois par mois pour préparer les nouvelles données
+    schedule_interval='@monthly', 
     start_date=datetime(2026, 1, 1),
     catchup=False,
     tags=['phytoscan', 'etl', 'computer_vision'],
 ) as dag:
 
-    # Définition des "Nœuds" du graphe Airflow
     t1_resize = PythonOperator(
         task_id='resize_and_clean_names',
         python_callable=task_resize_and_clean
@@ -136,5 +129,4 @@ with DAG(
         python_callable=task_split_train_val_test
     )
 
-    # L'ordre d'exécution !
     t1_resize >> t2_balance >> t3_split

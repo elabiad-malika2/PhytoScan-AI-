@@ -12,10 +12,8 @@ class User(Base):
     role = Column(String, default="agriculteur")
 
     
-    # 1. Relation avec la table des requêtes (Chatbot RAG)
     queries = relationship("Query", back_populates="user", cascade="all, delete-orphan")
     
-    # 2. Relation avec la table des scans (L'erreur venait d'ici !)
     scans = relationship("PlantScan", back_populates="user", cascade="all, delete-orphan")
     
     # reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")

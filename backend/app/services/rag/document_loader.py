@@ -6,7 +6,7 @@ def load_pdf_text(pdf_path: str) -> str:
     if not os.path.exists(pdf_path):
         raise FileNotFoundError(f"Fichier introuvable : {pdf_path}")
         
-    print(f"📄 Chargement du document : {pdf_path}")
+    print(f" Chargement du document : {pdf_path}")
     doc = fitz.open(pdf_path)
     full_text = ""
     for page in doc:

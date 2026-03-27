@@ -31,17 +31,15 @@ def download_report_pdf(
 ):
     """Génère (si besoin) et télécharge le rapport PDF d'un scan spécifique."""
     
-    # 1. Vérification de sécurité (Le scan existe-t-il et appartient-il à l'utilisateur ?)
     scan = db.query(PlantScan).filter(PlantScan.id == scan_id, PlantScan.user_id == current_user.id).first()
     if not scan:
         raise HTTPException(status_code=404, detail="Scan introuvable ou non autorisé.")
 
-    # 2. Récupération du texte généré par Gemini (Le Rapport)
     report = db.query(Report).filter(Report.scan_id == scan_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Aucune recommandation n'a été générée pour ce scan.")
 
-    # 3. Si le PDF existe DÉJÀ sur le serveur, on l'envoie tout de suite (Rapide !)
+    # PDF existe deja sur le serveur on l'envoie tout de suite 
     if report.pdf_path and os.path.exists(f"/app/data{report.pdf_path}"):
         return FileResponse(
             path=f"/app/data{report.pdf_path}", 
@@ -49,8 +47,8 @@ def download_report_pdf(
             filename=f"Diagnostic_{scan.disease_detected}.pdf"
         )
 
-    # 4. S'il n'existe pas, on le GÉNÈRE
-    absolute_image_path = f"/app/data{scan.image_path}" # Ex: /app/data/uploads/image.jpg
+    #  S'il n'existe pas on le genere
+    absolute_image_path = f"/app/data{scan.image_path}" 
     
     pdf_filepath = generate_diagnostic_pdf(
         username=current_user.username,
@@ -59,11 +57,9 @@ def download_report_pdf(
         image_path=absolute_image_path if os.path.exists(absolute_image_path) else None
     )
 
-    # 5. On met à jour la base de données pour se souvenir d'où est stocké le PDF
-    report.pdf_path = pdf_filepath.replace("/app/data", "") # On stocke un chemin web relatif
+    report.pdf_path = pdf_filepath.replace("/app/data", "") 
     db.commit()
 
-    # 6. On l'envoie à l'utilisateur
     return FileResponse(
         path=pdf_filepath, 
         media_type='application/pdf', 

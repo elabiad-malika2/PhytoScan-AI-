@@ -32,7 +32,6 @@ def remove_agriculteur(
     current_admin: User = Depends(get_current_admin)
 ):
     """Bannit un utilisateur et supprime toutes ses données (Scans, Historique)."""
-    # Empêcher l'admin de se suicider (se supprimer lui-même)
     if user_id == current_admin.id:
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte Admin.")
 

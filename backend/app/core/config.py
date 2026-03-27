@@ -6,7 +6,6 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    # Optionnel si DATABASE_URL pointe ailleurs (ex. SQLite en tests / CI)
     POSTGRES_USER: str | None = None
     POSTGRES_PASSWORD: str | None = None
     POSTGRES_DB: str | None = None
@@ -19,7 +18,6 @@ class Settings(BaseSettings):
     MLFLOW_TRACKING_URI:str
     OPENAI_API_KEY:str
 
-    # Racine des données (uploads, rapports, modèles). Docker : /app/data ; CI : chemin sous le workspace.
     DATA_ROOT: str = "/app/data"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

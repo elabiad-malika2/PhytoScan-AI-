@@ -60,7 +60,7 @@ export default function AdminUsers() {
                   className="btn admin-btn-danger"
                   onClick={() => handleDelete(u.id, u.username)}
                 >
-                  Bannir
+                  Delete
                 </button>
               </div>
             </div>

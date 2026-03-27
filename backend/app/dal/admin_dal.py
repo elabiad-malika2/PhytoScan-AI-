@@ -21,7 +21,6 @@ def get_platform_statistics(db: Session):
     total_scans = db.query(PlantScan).count()
     total_questions = db.query(Query).count()
     
-    # Les 5 derniers scans sur la plateforme (pour que l'admin surveille)
     recent_scans = db.query(PlantScan).order_by(PlantScan.created_at.desc()).limit(5).all()
 
     return {

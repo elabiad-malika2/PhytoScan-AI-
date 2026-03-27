@@ -48,7 +48,6 @@ def get_current_agriculteur(current_user = Depends(get_current_user)):
     return current_user
 
 def get_current_admin(current_user = Depends(get_current_user)):
-    """Vérifie que l'utilisateur a bien le rôle 'admin'."""
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 

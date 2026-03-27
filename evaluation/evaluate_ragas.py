@@ -1,7 +1,6 @@
 import sys
 import os
 
-# 🛠️ HACK CHEMIN PYTHON : Autorise l'importation du dossier "app"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
@@ -11,9 +10,7 @@ import mlflow
 from datasets import Dataset
 from ragas import evaluate
 
-# Métriques « legacy » (ragas.metrics.base.Metric) : seules acceptées par evaluate().
-# evaluate() injecte llm / embeddings sur ces instances si elles sont encore None.
-# Les classes de ragas.metrics.collections ne sont PAS des Metric → TypeError si on les passe en liste.
+
 from ragas.metrics._answer_relevance import answer_relevancy
 from ragas.metrics._context_precision import context_precision
 from ragas.metrics._context_recall import context_recall
@@ -21,15 +18,12 @@ from ragas.metrics._faithfulness import faithfulness
 from ragas.llms import llm_factory
 from openai import OpenAI
 
-# answer_relevancy (métrique legacy) appelle embed_query() — interface LangChain, pas l’embedder natif RAGAS.
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
-# 3. Imports de ton RAG Backend
 from app.services.rag.retriever import retrieve_and_rerank
 from app.services.rag.generator import generate_agricultural_advice
 
 
-# Noms affichés dans MLflow (les clés RAGAS sont en snake_case, ex. answer_relevancy)
 _MLFLOW_METRIC_LABELS = {
     "faithfulness": "Faithfulness",
     "answer_relevancy": "Answer_Relevancy",
@@ -93,11 +87,8 @@ def log_ragas_scores_to_mlflow(result) -> None:
         print(f"   {label} = {value}")
 
 
-# =======================================================
-# 1. CONFIGURATION SIMPLE DES JUGES
-# =======================================================
+
 print(" Initialisation du Juge Ollama (phi3)...")
-# API compatible OpenAI : /v1 (voir https://github.com/ollama/ollama/blob/main/docs/openai.md)
 _ollama_base = os.environ.get(
     "OLLAMA_OPENAI_BASE_URL", "http://host.docker.internal:11434/v1"
 )
@@ -112,9 +103,7 @@ juge_embeddings = HuggingFaceEmbeddings(
 )
 
 
-# =======================================================
-# 2. PRÉPARATION DU DATASET
-# =======================================================
+
 print(" Chargement du JSON de test...")
 with open("/app/evaluation/deepeval_tests/dataset.json", "r", encoding="utf-8") as f:
     test_cases = json.load(f)
@@ -142,10 +131,8 @@ dataset = Dataset.from_dict({
 })
 
 
-# =======================================================
-# 3. L'ÉVALUATION RAGAS
-# =======================================================
-print("\n⚖️ Ollama évalue les réponses de Gemini. Cela peut prendre quelques minutes...")
+
+print("\nOllama évalue les réponses de Gemini. Cela peut prendre quelques minutes...")
 metriques_a_evaluer = [
     faithfulness,
     answer_relevancy,
@@ -164,9 +151,7 @@ print("\n RÉSULTATS GLOBAUX :")
 print(resultats)
 
 
-# =======================================================
-# 4. ENREGISTREMENT DANS MLFLOW
-# =======================================================
+
 print("\n Sauvegarde des scores dans MLFlow...")
 mlflow.set_tracking_uri("http://mlflow:5000")
 mlflow.set_experiment("PhytoScan_Ragas_Evaluation")

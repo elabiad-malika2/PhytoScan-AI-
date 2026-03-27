@@ -90,9 +90,9 @@ export const api = {
     return response.blob();
   },
 
-  // ==========================================
+  
   // ROUTES ADMIN
-  // ==========================================
+  
   getAdminDashboard: async () => {
     const response = await fetch(`${BASE_URL}/admin/dashboard`, {
       headers: { Authorization: `Bearer ${getToken()}` },

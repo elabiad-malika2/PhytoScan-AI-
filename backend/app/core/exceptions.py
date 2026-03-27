@@ -1,5 +1,3 @@
-# Custom handlers (ex: VisionModelError)
-
 class PhytoScanException(Exception):
     """Classe de base. Permet de définir un message, un code HTTP et des headers"""
     def __init__(self, detail: str, status_code: int = 400, headers: dict = None):
